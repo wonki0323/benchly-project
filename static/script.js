@@ -39,7 +39,7 @@ searchButton.addEventListener('click', () => {
     if (keyword) {
         resultsContainer.innerHTML = '<p>데이터를 불러오는 중입니다...</p>';
 
-        fetch('http://127.0.0.1:5000/api/search', {
+        fetch('/api/search', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ keyword: keyword }),
