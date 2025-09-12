@@ -6,7 +6,7 @@ from googleapiclient.discovery import build
 app = Flask(__name__)
 CORS(app)
 
-YOUTUBE_API_KEY = 'YOUR_API_KEY' # 여기에 당신의 API 키를 넣으세요
+YOUTUBE_API_KEY = 'AIzaSyAbhifkk3DT3xqKSxr4GW2ZG-aggN248VE' # 여기에 당신의 API 키를 넣으세요
 
 # 정문('/')으로 요청이 오면 index.html 파일을 보여주는 라우트 추가
 @app.route('/')
