@@ -1,6 +1,3 @@
-//... (다른 요소들)
-const excludeMadeForKids = document.getElementById('excludeMadeForKids');
-const language = document.getElementById('language'); // <-- ★★★ 이 줄을 추가하세요 ★★★
 // HTML 문서가 완전히 로드된 후에 이 안의 코드를 실행합니다.
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -50,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const minVPH = document.getElementById('minVPH');
     const maxResults = document.getElementById('maxResults');
     const excludeMadeForKids = document.getElementById('excludeMadeForKids');
+    const language = document.getElementById('language'); // 언어 필터 추가
 
 
     // ============ 2. 검색 실행 (핵심 로직 함수) ============
@@ -66,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
             useVPH: vphToggle.checked,
             minVPH: minVPH.value,
             maxResults: maxResults.value,
-            excludeKids: excludeMadeForKids.checked 
-            language: language.value // <-- ★★★ 이 줄을 추가하세요 ★★★
+            excludeKids: excludeMadeForKids.checked, // <-- ★★★ 여기에 쉼표(,)가 빠졌었습니다 ★★★
+            language: language.value 
         };
 
         if (!searchParams.query) {
@@ -130,6 +128,12 @@ document.addEventListener('DOMContentLoaded', () => {
             startSearch();
         }
     });
+    // '언어' 필터에도 자동 검색 이벤트 추가
+    language.addEventListener('change', () => {
+        if (searchInput.value) {
+            startSearch();
+        }
+    });
 
 
     // ============ 3. 클라이언트 사이드 정렬 기능 ============
@@ -177,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // ============ 4. 테이블을 화면에 그리는 함수 (K 포맷팅 및 셀 병합) ============
+    // ============ 4. 테이블을 화면에 그리는 함수 ============
     function renderTable() {
         if (!currentResults || currentResults.length === 0) {
             initialMessage.innerHTML = '<p>검색 결과가 없거나, 모든 결과가 필터에 의해 제외되었습니다.</p>';
@@ -202,8 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="title">${video.title}</div>
                         <div class="channel">${video.channelTitle} - ${video.publishedAt_formatted}</div>
                     </td>
-                    <td>${nFormatter(video.viewCount, 1)}</td> <td class="highlight-metric like-ratio">${video.likeRatio}%</td>
-                    <td class="highlight-metric vph">${video.vph.toLocaleString()}</td> <td>${nFormatter(video.subscriberCount, 1)}</td> <td class="highlight-metric ratio">${video.ratio}%</td>
+                    <td>${nFormatter(video.viewCount, 1)}</td> 
+                    <td class="highlight-metric like-ratio">${video.likeRatio}%</td>
+                    <td class="highlight-metric vph">${video.vph.toLocaleString()}</td>
+                    <td>${nFormatter(video.subscriberCount, 1)}</td> 
+                    <td class="highlight-metric ratio">${video.ratio}%</td>
                     <td>${video.duration_formatted}</td> 
                     <td><a href="${videoUrl}" target="_blank" class="btn-link">보기</a></td>
                 </tr>
