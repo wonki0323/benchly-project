@@ -1,3 +1,6 @@
+//... (다른 요소들)
+const excludeMadeForKids = document.getElementById('excludeMadeForKids');
+const language = document.getElementById('language'); // <-- ★★★ 이 줄을 추가하세요 ★★★
 // HTML 문서가 완전히 로드된 후에 이 안의 코드를 실행합니다.
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -64,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
             minVPH: minVPH.value,
             maxResults: maxResults.value,
             excludeKids: excludeMadeForKids.checked 
+            language: language.value // <-- ★★★ 이 줄을 추가하세요 ★★★
         };
 
         if (!searchParams.query) {
