@@ -3,13 +3,13 @@ from flask_cors import CORS
 from googleapiclient.discovery import build
 import os
 from datetime import datetime, timezone, timedelta
-import isodate  # 영상 길이를 초 단위로 변환하기 위해 import
+import isodate
 
 app = Flask(__name__)
 CORS(app)
 
 # --- 로컬 테스트용 API 키 설정 ---
-YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
+YOUTUBE_API_KEY = 'YOUR_API_KEY' # 'YOUR_API_KEY' 부분에 당신의 키를 붙여넣으세요.
 
 
 @app.route('/')
@@ -33,7 +33,7 @@ def search():
             'regionCode': params.get('region'),
             'maxResults': params.get('maxResults'),
             'order': params.get('sortOrder', 'relevance'),
-            'relevanceLanguage': params.get('language', 'ko')
+            'relevanceLanguage': params.get('language', 'ko') # API에는 '제안'을 보냄
         }
 
         if params.get('period'):
@@ -60,7 +60,6 @@ def search():
             channel_ids.add(channel_id)
             videos_base_info.append({
                 'videoId': video_id, 'channelId': channel_id, 'title': item['snippet']['title'],
-                'thumbnail': item['snippet']['thumbnails'].get('maxres', item['snippet']['thumbnails'].get('standard', item['snippet']['thumbnails'].get('high', item['snippet']['thumbnails']['default']))).get('url'),
                 'channelTitle': item['snippet']['channelTitle'], 'publishedAt': item['snippet']['publishedAt']
             })
 
@@ -68,7 +67,7 @@ def search():
             return jsonify({'items': []})
 
         video_stats_response = youtube.videos().list(
-            part='statistics,contentDetails,status', 
+            part='statistics,contentDetails,status,snippet', # snippet을 요청하고 있음
             id=','.join(video_ids)
         ).execute()
         
@@ -81,6 +80,8 @@ def search():
         channel_stats = {item['id']: item['statistics'] for item in channel_stats_response.get('items', [])}
 
         results = []
+        requested_lang_code = params.get('language', 'ko').split('-')[0] # 'ko'만 추출
+
         for video in videos_base_info:
             video_id = video['videoId']
             channel_id = video['channelId']
@@ -88,10 +89,25 @@ def search():
             if video_id not in video_details or channel_id not in channel_stats:
                 continue 
 
+            # --- [ ★★★★★ 새로운 엄격한 언어 필터 ★★★★★ ] ---
+            full_snippet = video_details[video_id].get('snippet', {})
+            video_lang = full_snippet.get('defaultLanguage', '').split('-')[0] # 'ko'
+            audio_lang = full_snippet.get('defaultAudioLanguage', '').split('-')[0] # 'ko'
+
+            # 요청된 언어가 "어느 쪽에도" 명시되어 있지 않다면, 결과에서 제외
+            if requested_lang_code and (video_lang != requested_lang_code and audio_lang != requested_lang_code):
+                continue # 이 영상은 건너뜀
+            # --- [ ★★★★★ 필터 끝 ★★★★★ ] ---
+
             stats = video_details[video_id].get('statistics', {})
             content_details = video_details[video_id].get('contentDetails', {})
             status = video_details[video_id].get('status', {})
             is_made_for_kids = status.get('madeForKids', False)
+
+            # 썸네일 정보는 여기서, 완전한 snippet 정보로 가져옴
+            thumbnails = full_snippet.get('thumbnails', {})
+            video['thumbnail'] = thumbnails.get('maxres', thumbnails.get('standard', thumbnails.get('high', thumbnails.get('default', {})))).get('url', '')
+
 
             if params.get('excludeKids') and is_made_for_kids:
                 continue 
@@ -118,14 +134,10 @@ def search():
             like_ratio = round((likes / views) * 100, 2) if views > 0 else 0 
 
             video.update({
-                'viewCount': views,
-                'likeCount': likes, 
-                'subscriberCount': subscribers,
-                'ratio': ratio,
-                'likeRatio': like_ratio, 
-                'vph': vph,
+                'viewCount': views, 'likeCount': likes, 'subscriberCount': subscribers,
+                'ratio': ratio, 'likeRatio': like_ratio, 'vph': vph,
                 'publishedAt_timestamp': published_time.timestamp(), 
-                'publishedAt_formatted': published_time.strftime('%y-%m-%d'), # <--- Y를 y로 수정
+                'publishedAt_formatted': published_time.strftime('%y-%m-%d'),
                 'duration_seconds': duration_seconds, 
                 'duration_formatted': str(timedelta(seconds=int(duration_seconds)))
             })
