@@ -32,7 +32,7 @@ def search():
             'type': 'video',
             'regionCode': params.get('region'),
             'maxResults': params.get('maxResults'),
-            'order': params.get('sortOrder', 'relevance') 
+            'order': params.get('sortOrder', 'relevance'),
             'relevanceLanguage': params.get('language', 'ko')
         }
 
