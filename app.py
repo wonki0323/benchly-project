@@ -9,8 +9,10 @@ app = Flask(__name__)
 CORS(app)
 
 # --- 로컬 테스트용 API 키 설정 ---
-YOUTUBE_API_KEY = 'YOUR_API_KEY' # 'YOUR_API_KEY' 부분에 당신의 키를 붙여넣으세요.
-
+YOUTUBE_API_KEY = os.environ.get('YOUTUBE_API_KEY')
+print("==========================================================")
+print(f"--- DEBUGGING KEY --- Loaded API Key: {YOUTUBE_API_KEY}")
+print("==========================================================")
 
 @app.route('/')
 def home():
