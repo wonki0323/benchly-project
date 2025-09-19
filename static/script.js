@@ -1,34 +1,11 @@
-// HTML 문서가 완전히 로드된 후에 이 안의 코드를 실행합니다.
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ============ 0. 새로운 헬퍼 함수 (숫자 K/M 포맷팅) ============
-    /**
-     * 숫자를 K(천), M(백만) 단위로 축약해주는 함수
-     */
-    function nFormatter(num, digits) {
-        if (!num) return '0'; // 0 또는 null일 경우 '0' 반환
-        const si = [
-            { value: 1, symbol: "" },
-            { value: 1E3, symbol: "K" },
-            { value: 1E6, symbol: "M" },
-            { value: 1E9, symbol: "B" }, // 10억
-            { value: 1E12, symbol: "T" }  // 1조
-        ];
-        const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-        let i;
-        for (i = si.length - 1; i > 0; i--) {
-            if (num >= si[i].value) {
-                break;
-            }
-        }
-        return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
-    }
-
     // ============ 1. 전역 변수 및 UI 요소 ============
-    let currentResults = []; // 검색 결과를 저장할 전역 배열
-    let currentSort = { key: 'ratio', direction: 'desc' }; // 현재 정렬 상태
+    let currentResults = []; // 현재 화면의 검색 결과(스냅샷)를 저장할 전역 배열
+    let currentSort = { key: 'ratio', direction: 'desc' };
+    let lastSearchParams = {}; // 현재 화면의 검색 조건을 저장할 전역 변수
 
-    // --- UI 요소들 가져오기 ---
+    // --- UI 요소들 ---
     const startButton = document.getElementById('startButton');
     const searchInput = document.getElementById('searchInput');
     const searchModeKeyword = document.getElementById('searchKeyword');
@@ -36,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsTableBody = document.getElementById('results-tbody'); 
     const initialMessage = document.getElementById('initial-message');
     const clearButton = document.getElementById('clearButton');
+    const saveJobButton = document.getElementById('saveJobButton'); 
 
     // --- 필터 요소들 ---
     const videoLengthType = document.getElementById('videoLengthType');
@@ -47,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const minVPH = document.getElementById('minVPH');
     const maxResults = document.getElementById('maxResults');
     const excludeMadeForKids = document.getElementById('excludeMadeForKids');
-    const language = document.getElementById('language'); // 언어 필터 추가
+    const language = document.getElementById('language');
 
 
     // ============ 2. 검색 실행 (핵심 로직 함수) ============
@@ -64,22 +42,22 @@ document.addEventListener('DOMContentLoaded', () => {
             useVPH: vphToggle.checked,
             minVPH: minVPH.value,
             maxResults: maxResults.value,
-            excludeKids: excludeMadeForKids.checked, // <-- ★★★ 여기에 쉼표(,)가 빠졌었습니다 ★★★
+            excludeKids: excludeMadeForKids.checked, 
             language: language.value 
         };
 
         if (!searchParams.query) {
-            if (event && (event.type === 'change' || event.type === 'keydown')) {
-                return;
-            }
+            if (event && (event.type === 'change' || event.type === 'keydown')) { return; }
             alert("검색어 또는 채널 URL을 입력해주세요.");
             return;
         }
 
         console.log("백엔드로 전송할 검색 파라미터:", searchParams);
-        initialMessage.innerHTML = `<p>데이터를 분석하는 중입니다... (최대 10초 소요될 수 있습니다)</p>`;
+        initialMessage.innerHTML = `<p>데이터를 분석하는 중입니다... (API 호출 중)</p>`;
         initialMessage.style.display = 'block'; 
         resultsTableBody.innerHTML = ''; 
+
+        lastSearchParams = searchParams; // 마지막 검색 조건 저장
 
         fetch('/api/search', {
             method: 'POST',
@@ -87,14 +65,17 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify(searchParams),
         })
         .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            if (!response.ok) {
+                if (response.status === 401) { throw new Error('로그인이 필요합니다. 로그인 페이지로 이동합니다.'); }
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
             return response.json();
         })
         .then(data => {
             if (data.error) throw new Error(data.error);
             
             console.log('✅ 백엔드 데이터 수신 성공:', data);
-            currentResults = data.items; 
+            currentResults = data.items; // ★★★ 결과를 전역 변수에 저장 (저장 버튼이 이 데이터를 사용) ★★★
             initialMessage.style.display = 'none'; 
             
             sortData('ratio', 'desc'); 
@@ -103,93 +84,102 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(error => {
             console.error('❌ 에러 발생:', error);
-            initialMessage.innerHTML = `<p>데이터를 불러오는 데 실패했습니다. 오류: ${error.message}</p><p>API 키 또는 할당량을 확인해주세요.</p>`;
+            initialMessage.innerHTML = `<p>데이터를 불러오는 데 실패했습니다. 오류: ${error.message}</p>`;
+            if (error.message.includes('로그인')) {
+                setTimeout(() => { window.location.href = '/login'; }, 2000);
+            }
             initialMessage.style.display = 'block';
             currentResults = []; 
         });
     }
 
     // --- 이벤트 리스너 연결 ---
-    
     startButton.addEventListener('click', startSearch);
-    sortOrder.addEventListener('change', () => {
-        if (searchInput.value) { 
-            startSearch();
-        }
-    });
-    videoLengthType.addEventListener('change', () => {
-        if (searchInput.value) {
-            startSearch();
-        }
-    });
+    sortOrder.addEventListener('change', () => { if (searchInput.value) { startSearch(); } });
+    videoLengthType.addEventListener('change', () => { if (searchInput.value) { startSearch(); } });
+    language.addEventListener('change', () => { if (searchInput.value) { startSearch(); } });
     searchInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             event.preventDefault(); 
             startSearch();
         }
     });
-    // '언어' 필터에도 자동 검색 이벤트 추가
-    language.addEventListener('change', () => {
-        if (searchInput.value) {
-            startSearch();
+
+    // ★★★ '작업 저장' 버튼 로직 수정: 이제 검색 결과(currentResults)도 함께 보냄 ★★★
+    saveJobButton.addEventListener('click', () => {
+        if (Object.keys(lastSearchParams).length === 0 || !lastSearchParams.query) {
+            alert('먼저 검색을 실행해주세요.');
+            return;
+        }
+        if (currentResults.length === 0) {
+            alert('저장할 검색 결과가 없습니다.');
+            return;
+        }
+
+        const projectName = prompt('이 검색 작업을 어떤 이름으로 저장하시겠습니까?', lastSearchParams.query);
+
+        if (projectName) {
+            fetch('/api/project/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    projectName: projectName,
+                    searchParams: lastSearchParams,  // 검색 조건
+                    searchResults: currentResults  // ★★★ 검색 결과 스냅샷 ★★★
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    if (data.error.includes('로그인')) {
+                        alert(data.error);
+                        window.location.href = '/login';
+                    } else { alert('오류: ' + data.error); }
+                }
+            })
+            .catch(err => { console.error('Save Project Error:', err); alert('프로젝트 저장 중 오류가 발생했습니다.'); });
         }
     });
 
 
-    // ============ 3. 클라이언트 사이드 정렬 기능 ============
-
+    // ============ 3. 클라이언트 사이드 정렬 기능 (변경 없음) ============
     function sortAndRender(sortKey) {
         let direction = 'desc'; 
-        if (currentSort.key === sortKey && currentSort.direction === 'desc') {
-            direction = 'asc';
-        }
-        
-        sortData(sortKey, direction); 
-        renderTable(); 
-        updateSortHeaders(sortKey, direction); 
-        
+        if (currentSort.key === sortKey && currentSort.direction === 'desc') { direction = 'asc'; }
+        sortData(sortKey, direction); renderTable(); updateSortHeaders(sortKey, direction); 
         currentSort = { key: sortKey, direction };
     }
-
     function sortData(key, direction) {
         const multiplier = (direction === 'asc') ? 1 : -1;
         currentResults.sort((a, b) => {
-            let valA = a[key];
-            let valB = b[key];
-            if (typeof valA === 'string') {
-                return valA.localeCompare(valB) * multiplier;
-            }
+            let valA = a[key]; let valB = b[key];
+            if (typeof valA === 'string') { return valA.localeCompare(valB) * multiplier; }
             return (valA - valB) * multiplier;
         });
     }
-    
     document.querySelectorAll('th.sortable[data-sort-key]').forEach(header => {
         header.addEventListener('click', () => {
             const sortKey = header.getAttribute('data-sort-key');
             sortAndRender(sortKey);
         });
     });
-
     function updateSortHeaders(activeKey, direction) {
-        document.querySelectorAll('th.sortable span').forEach(span => {
-            span.textContent = ''; 
-        });
+        document.querySelectorAll('th.sortable span').forEach(span => { span.textContent = ''; });
         const activeHeader = document.querySelector(`th[data-sort-key="${activeKey}"] span`);
-        if (activeHeader) {
-            activeHeader.textContent = (direction === 'asc') ? ' ▲' : ' ▼';
-        }
+        if (activeHeader) { activeHeader.textContent = (direction === 'asc') ? ' ▲' : ' ▼'; }
     }
 
 
-    // ============ 4. 테이블을 화면에 그리는 함수 ============
+    // ============ 4. 테이블을 화면에 그리는 함수 (변경 없음) ============
     function renderTable() {
         if (!currentResults || currentResults.length === 0) {
             initialMessage.innerHTML = '<p>검색 결과가 없거나, 모든 결과가 필터에 의해 제외되었습니다.</p>';
             initialMessage.style.display = 'block';
-            resultsTableBody.innerHTML = '';
-            return;
+            resultsTableBody.innerHTML = ''; return;
         }
-
+        initialMessage.style.display = 'none'; // 결과가 있으니 초기 메시지 숨김
         let tableBodyHTML = '';
         currentResults.forEach((video, index) => { 
             const videoUrl = `https://www.youtube.com/watch?v=${video.videoId}`;
@@ -216,25 +206,77 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>
             `;
         });
-
         resultsTableBody.innerHTML = tableBodyHTML;
     }
+    function nFormatter(num, digits) {
+        if (!num) return '0'; 
+        const si = [ { value: 1, symbol: "" }, { value: 1E3, symbol: "K" }, { value: 1E6, symbol: "M" }, { value: 1E9, symbol: "B" }, { value: 1E12, symbol: "T" } ];
+        const rx = /\.0+$|(\.[0-9]*[1-9])0+$/; let i;
+        for (i = si.length - 1; i > 0; i--) { if (num >= si[i].value) { break; } }
+        return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
+    }
 
-    // ============ 5. 기타 UI 로직 ============
-    
+    // ============ 5. 기타 UI 로직 (변경 없음) ============
     clearButton.addEventListener('click', () => {
         initialMessage.innerHTML = '<p>분석할 조건을 설정하고 [Search] 버튼을 누르세요.</p>';
         initialMessage.style.display = 'block';
         resultsTableBody.innerHTML = '';
         searchInput.value = '';
         currentResults = []; 
+        lastSearchParams = {}; 
     });
+    searchModeKeyword.addEventListener('change', () => { searchInput.placeholder = "분석할 키워드를 입력하세요."; });
+    searchModeChannel.addEventListener('change', () => { searchInput.placeholder = "분석할 채널의 핸들(@채널명) 또는 URL을 입력하세요."; });
 
-    searchModeKeyword.addEventListener('change', () => {
-        searchInput.placeholder = "분석할 키워드를 입력하세요.";
-    });
-    searchModeChannel.addEventListener('change', () => {
-        searchInput.placeholder = "분석할 채널의 핸들(@채널명) 또는 URL을 입력하세요.";
-    });
+    
+    // ============ 6. ★★★ 새로 추가된 '프로젝트 불러오기' 로직 ★★★ ============
+    /**
+     * 페이지 로드 시 localStorage를 확인하여, 불러올 프로젝트가 있는지 체크하는 함수
+     */
+    function loadProjectFromStorage() {
+        const paramsString = localStorage.getItem('projectToLoad_Params');
+        const resultsString = localStorage.getItem('projectToLoad_Results');
+
+        // 1. 불러올 '결과'와 '조건'이 모두 존재하는지 확인
+        if (paramsString && resultsString) {
+            console.log("불러올 프로젝트 데이터를 찾았습니다!");
+            try {
+                // 2. 데이터 파싱
+                const params = JSON.parse(paramsString);
+                const results = JSON.parse(resultsString);
+
+                // 3. 모든 필터 입력창에 저장된 값들을 다시 채워넣음
+                searchInput.value = params.query || '';
+                searchModeKeyword.checked = params.searchType === 'keyword';
+                searchModeChannel.checked = params.searchType === 'channel';
+                videoLengthType.value = params.videoLength || 'any';
+                uploadDays.value = params.period || '30';
+                regionCode.value = params.region || 'KR';
+                sortOrder.value = params.sortOrder || 'relevance';
+                minViewCount.value = params.minViews || '10000';
+                vphToggle.checked = params.useVPH || false;
+                minVPH.value = params.minVPH || '100';
+                maxResults.value = params.maxResults || '50';
+                excludeMadeForKids.checked = params.excludeKids; 
+                language.value = params.language || 'ko';
+
+                // 4. (중요!) API 검색(startSearch) 대신, 저장된 결과를 전역 변수에 넣고 바로 렌더링
+                currentResults = results;
+                lastSearchParams = params; // 이 작업도 저장된 작업으로 인식
+                renderTable(); // 저장된 결과로 테이블 즉시 그리기
+                updateSortHeaders('ratio', 'desc'); // 기본 정렬 UI 적용
+                
+            } catch (e) {
+                console.error("프로젝트 불러오기 실패 (잘못된 데이터):", e);
+            } finally {
+                // 5. 작업이 성공하든 실패하든, 일회용 택배(localStorage)는 즉시 삭제
+                localStorage.removeItem('projectToLoad_Params');
+                localStorage.removeItem('projectToLoad_Results');
+            }
+        }
+    }
+
+    // --- 페이지 로드 시 '불러오기' 함수를 1회 실행 ---
+    loadProjectFromStorage();
 
 });

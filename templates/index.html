@@ -6,10 +6,27 @@
     <title>Benchly</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .auth-links a { margin-left: 15px; text-decoration: none; color: #3498db; font-weight: bold; }
+        .auth-links .user-welcome { margin-right: 15px; color: #333; }
+    </style>
 </head>
 <body>
-
     <main>
+        <nav class="navbar">
+            <div></div>
+            <div class="auth-links">
+                {% if current_user.is_authenticated %}
+                    <span class="user-welcome">{{ current_user.username }}님, 환영합니다!</span>
+                    <a href="{{ url_for('logout') }}">로그아웃</a>
+                {% else %}
+                    <a href="{{ url_for('login_page') }}">로그인</a>
+                    <a href="{{ url_for('register_page') }}">회원가입</a>
+                {% endif %}
+            </div>
+        </nav>
+
         <h1>Benchly 🚀</h1>
         
         <section class="control-panel">
@@ -26,7 +43,7 @@
             </div>
             
             <div class="search-actions">
-                <button id="stopButton"><i class="fa-solid fa-stop"></i> 중지</button>
+                <button id="saveJobButton"><i class="fa-solid fa-save"></i> 현재 작업 저장</button>
                 <button id="clearButton"><i class="fa-solid fa-trash"></i> 결과 지우기</button>
                 <button id="exportButton"><i class="fa-solid fa-file-excel"></i> Excel로 내보내기</button>
             </div>
@@ -46,8 +63,7 @@
                     <label for="excludeMadeForKids">아동용 콘텐츠 제외</label>
                 </div>
             </div>
-
-            <<div class="filter-group">
+            <div class="filter-group">
                 <h4>기간 및 지역</h4>
                 <label for="uploadDays">업로드 기간:</label>
                 최근 <input type="number" id="uploadDays" value="30" min="1" max="365"> 일 이내
@@ -58,7 +74,7 @@
                     <option value="US">미국</option>
                     <option value="JP">일본</option>
                 </select>
-                <label for="language">언어:</label>
+                 <label for="language" style="margin-left:10px;">언어:</label>
                 <select id="language">
                     <option value="ko">한국어</option>
                     <option value="en">영어</option>
@@ -66,7 +82,6 @@
                     <option value="zh">중국어</option>
                 </select>
             </div>
-
             <div class="filter-group">
                 <h4>검색 정렬 기준</h4>
                 <select id="sortOrder">
@@ -75,7 +90,6 @@
                     <option value="date">최신 업로드 순</option>
                 </select>
             </div>
-
             <div class="filter-group">
                 <h4>성과 필터 (서버 2차 필터링)</h4>
                 <label for="minViewCount">최소 조회수:</label>
@@ -86,7 +100,6 @@
                     <input type="number" id="minVPH" value="100" step="10">
                 </div>
             </div>
-
             <div class="filter-group">
                 <h4>결과 수 제한</h4>
                 <label for="maxResults">최대 결과 수:</label>
@@ -111,13 +124,12 @@
                     </tr>
                 </thead>
                 <tbody id="results-tbody">
-                    </tbody>
+                </tbody>
             </table>
             <p id="initial-message">분석할 조건을 설정하고 [Search] 버튼을 누르세요.</p>
         </section>
 
     </main>
-
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
