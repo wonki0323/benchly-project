@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대시보드 - Benchly</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .auth-links a { margin-left: 15px; text-decoration: none; color: #3498db; font-weight: bold; }
+        .auth-links .user-welcome { margin-right: 15px; color: #333; }
+        
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .project-list { list-style: none; padding: 0; }
+        .project-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .project-item h3 { margin: 0; color: #2c3e50; }
+        .project-item span { font-size: 0.9em; color: #7f8c8d; }
+        .project-actions .btn-link { margin-left: 10px; }
+        .btn-delete { color: #e74c3c !important; }
+    </style>
+</head>
+<body>
+    <main style="max-width: 900px;"> 
+        <nav class="navbar">
+            <div><h1>Benchly 🚀</h1></div>
+            <div class="auth-links">
+                {% if current_user.is_authenticated %}
+                    <span class="user-welcome">{{ current_user.username }}님, 환영합니다!</span>
+                    <a href="{{ url_for('logout') }}">로그아웃</a>
+                {% else %}
+                    <a href="{{ url_for('login_page') }}">로그인</a>
+                    <a href="{{ url_for('register_page') }}">회원가입</a>
+                {% endif %}
+            </div>
+        </nav>
+
+        <div class="dashboard-header">
+            <h2>내 프로젝트 대시보드</h2>
+            <a href="{{ url_for('search_page') }}" class="btn-primary" style="text-decoration: none;">
+                <i class="fa-solid fa-plus"></i> 새 프로젝트 시작하기
+            </a>
+        </div>
+
+        <ul class="project-list" id="project-list-container">
+            {% for project in projects %}
+            <li class="project-item" id="project-item-{{ project.id }}">
+                <div>
+                    <h3>{{ project.project_name }}</h3>
+                    <span>저장일: {{ project.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+                <div class="project-actions">
+                    <a href="#" class="btn-link btn-load" data-id="{{ project.id }}">불러오기</a> 
+                    <a href="#" class="btn-link btn-delete" data-id="{{ project.id }}">삭제</a> 
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+
+    </main>
+    
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

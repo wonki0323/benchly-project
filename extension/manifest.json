@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Benchly Subtitle Extractor",
+  "version": "1.0",
+  "description": "Extracts YouTube subtitles for Benchly.cloud.",
+  
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "permissions": [
+    "tabs",      // 탭을 열고 닫기 위해 필요
+    "storage",   // content.js가 자막을 저장하기 위해 필요
+    "scripting"  // (선택사항, content.js 주입에 다른 방식을 쓴다면 필요할 수 있음)
+  ],
+
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/watch?v=*"],
+      "js": ["content.js"],
+      "run_at": "document_start" // injected.js를 빨리 주입하기 위해
+    }
+  ],
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"], // content.js가 이 파일을 페이지에 주입할 수 있도록 허용
+      "matches": ["https://www.youtube.com/*"]
+    }
+  ],
+
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  // ★★★ 이 부분이 지금 문제의 해결책입니다 ★★★
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  "externally_connectable": {
+    "matches": [
+      // "https://benchly.cloud/*",
+      // 만약 로컬호스트(http://127.0.0.1)에서 테스트 중이라면 아래도 추가하세요.
+      "http://localhost/*",
+      "http://127.0.0.1:5000/*"
+    ]
+  }
+}

@@ -1,0 +1,482 @@
+/* ===================================================================
+                    static/style.css (최종 완성본)
+   =================================================================== */
+/* 기본 스타일 */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f4f7f9;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+main {
+    width: 100%;
+    max-width: 1600px;
+    text-align: center;
+}
+h1 {
+    font-size: 2.5em;
+    color: #2c3e50;
+}
+
+/* 네비게이션 바 스타일 */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    margin-bottom: 20px;
+}
+.auth-links a {
+    margin-left: 15px;
+    text-decoration: none;
+    color: #3498db;
+    font-weight: bold;
+}
+.auth-links .user-welcome {
+    margin-right: 15px;
+    color: #333;
+}
+
+/* 제어판 (Control Panel) 스타일 */
+.control-panel, .filter-panel {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+.search-mode {
+    margin-bottom: 15px;
+}
+.search-mode label {
+    margin-right: 15px;
+    cursor: pointer;
+}
+.search-main {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+#searchInput {
+    flex-grow: 1;
+    padding: 12px 15px;
+    font-size: 1.1em;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    transition: border-color 0.2s;
+}
+#searchInput:focus {
+    border-color: #3498db;
+    outline: none;
+}
+.btn-primary {
+    padding: 12px 20px;
+    font-size: 1.1em;
+    font-weight: bold;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    white-space: nowrap;
+}
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+.search-actions {
+    margin-top: 15px;
+}
+.search-actions button {
+    background-color: #ecf0f1;
+    color: #34495e;
+    border: 1px solid #bdc3c7;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 5px;
+    font-size: 0.9em;
+}
+.search-actions button:hover {
+    background-color: #dfe6e9;
+}
+.search-main #targetLanguage {
+    padding: 12px 8px;
+    font-size: 1em;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    background-color: #fff;
+}
+
+/* AI Keyword Recommendation Styles */
+#keyword-recommendation-area {
+    padding-top: 15px;
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+}
+.keyword-chip {
+    display: inline-block;
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    border-radius: 16px;
+    padding: 6px 12px;
+    margin: 4px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+.keyword-chip:hover {
+    background-color: #ced4da;
+}
+
+/* 상세 필터 (Filter Panel) 스타일 */
+.filter-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px 30px;
+}
+.filter-group h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+}
+.filter-group input[type="number"],
+.filter-group select {
+    width: 100px;
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin: 0 5px;
+}
+.filter-group label {
+    margin-right: 5px;
+}
+.filter-group div {
+    margin-top: 10px;
+}
+
+/* 결과 테이블 (Results Table) 스타일 */
+.results-table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9em;
+    border-spacing: 0; 
+}
+.results-table thead tr {
+    background-color: #f8f9fa;
+    color: #34495e;
+    text-align: left;
+    border-bottom: 2px solid #e0e0e0;
+}
+.results-table th,
+.results-table td {
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: top;
+    white-space: nowrap;
+    text-align: left;
+}
+.results-table tbody tr:last-child td {
+    border-bottom: none;
+}
+.results-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+.table-thumbnail {
+    width: 120px; 
+    border-radius: 4px;
+}
+.results-table .title {
+    font-weight: 600;
+    color: #000;
+    white-space: normal; 
+    min-width: 250px; 
+    margin: 0;
+    line-height: 1.4;
+}
+.results-table .channel {
+    font-size: 0.9em;
+    color: #555;
+    white-space: normal;
+    margin: 0;
+    padding-top: 4px;
+    line-height: 1.4;
+}
+.highlight-metric { font-weight: bold; font-size: 1.1em; }
+.highlight-metric.vph { color: #27ae60; }
+.highlight-metric.ratio { color: #e74c3c; }
+.highlight-metric.like-ratio { color: #3498db; }
+.btn-link {
+    display: inline-block;
+    padding: 5px 12px;
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    cursor: pointer;
+}
+.btn-link:hover { background-color: #dfe6e9; }
+.btn-link:disabled { background-color: #f4f4f4; color: #bdc3c7; cursor: not-allowed; }
+.col-number { font-weight: bold; color: #7f8c8d; text-align: center; width: 20px; }
+.thumbnail-cell { position: relative; text-align: center; width: 120px; }
+.download-link {
+    position: absolute; bottom: 10px; right: 10px; 
+    background-color: rgba(0, 0, 0, 0.6); color: white; border-radius: 50%;
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+    font-size: 0.8em; opacity: 0; transition: opacity 0.2s; text-decoration: none;
+}
+.thumbnail-cell:hover .download-link { opacity: 1; }
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { background-color: #f0f3f5; }
+th.sortable span { font-size: 0.8em; margin-left: 4px; color: #3498db; }
+
+/* Modal Styles */
+#transcript-modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); display: none;
+    align-items: center; justify-content: center; z-index: 1000;
+}
+.modal-content {
+    background: white; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    width: 90%; max-width: 700px; max-height: 80vh;
+    display: flex; flex-direction: column;
+}
+.modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px; border-bottom: 1px solid #eee;
+}
+.modal-header h2 {
+    margin: 0; font-size: 1.2em; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+}
+.modal-close-btn { display: none !important; }
+.modal-body { padding: 20px; overflow-y: auto; text-align: left; }
+.modal-footer {
+    display: flex; justify-content: center; padding: 15px 20px;
+    border-top: 1px solid #eee;
+}
+#modal-close-action-btn {
+    padding: 10px 25px; font-size: 1em; font-weight: bold;
+    background-color: #6c757d; color: white; border: none;
+    border-radius: 6px; cursor: pointer; transition: background-color 0.3s;
+}
+#modal-close-action-btn:hover { background-color: #5a6268; }
+.transcript-section { margin-bottom: 20px; }
+.transcript-section h4, .ai-section h4 { margin-top: 0; margin-bottom: 10px; }
+#modal-transcript-text { 
+    width: 100%; box-sizing: border-box; border: 1px solid #ddd;
+    border-radius: 4px; padding: 10px; font-size: 0.9em;
+    min-height: 150px; resize: vertical;
+}
+.ai-section h4 { border-top: 1px solid #eee; padding-top: 15px; }
+#modal-run-ai-btn {
+    width: 100%; font-size: 1em; font-weight: bold; margin-bottom: 15px;
+}
+#modal-run-ai-btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+.ai-result-box {
+    background: #f8f9fa; border: 1px solid #eee; border-radius: 4px;
+    padding: 15px; line-height: 1.6; min-height: 100px;
+}
+.loading-spinner {
+    display: inline-block; width: 15px; height: 15px;
+    border: 2px solid rgba(0, 0, 0, 0.1); border-radius: 50%;
+    border-top-color: #3498db; animation: spin 1s ease-in-out infinite;
+    margin-right: 5px; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+/* style.css 파일에 추가 */
+#modal-ai-prompt {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 0.9em;
+    min-height: 120px; /* 프롬프트 창 높이 */
+    resize: vertical;
+    margin-bottom: 15px; /* 버튼과의 간격 */
+}
+/* ===================================================================
+                    모달 영상 플레이어 스타일
+   =================================================================== */
+#modal-video-player-container {
+    position: relative;
+    /* 16:9 비율을 위한 트릭: padding-bottom을 56.25% (9 / 16 * 100)로 설정 */
+    padding-bottom: 56.25%; 
+    height: 0;
+    overflow: hidden;
+    margin-bottom: 20px; /* 비디오와 스크립트 섹션 사이의 간격 */
+    background-color: #000; /* 로딩 중 검은 배경 표시 */
+    border-radius: 4px;
+}
+
+#modal-video-player-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none; /* iframe의 기본 테두리 제거 */
+}
+/* ===================================================================
+                    모달 메타 정보 스타일 (신규 추가)
+   =================================================================== */
+.modal-video-meta {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2열 그리드 */
+    gap: 10px 15px; /* 행 간격, 열 간격 */
+    margin-bottom: 15px;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.meta-label {
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-bottom: 2px;
+    font-weight: 500;
+}
+
+.meta-value {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #212529;
+}
+
+.meta-tags .meta-label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.tag-chip-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tag-chip {
+    background-color: #e0e0e0;
+    color: #333;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+}
+
+.no-tags {
+    color: #888;
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+/* ===================================================================
+                    모달 정보 패널 스타일 (신규 추가)
+   =================================================================== */
+.modal-info-panel {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.modal-info-thumb img {
+    width: 120px;
+    height: 67px; /* 16:9 ratio */
+    border-radius: 4px;
+    object-fit: cover;
+    display: block;
+}
+
+.modal-info-stats {
+    flex: 1;
+    text-align: left;
+}
+
+.modal-info-stats h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    color: #212529;
+    font-weight: 600;
+}
+
+.stats-grid {
+    display: grid;
+    /* 화면 크기에 따라 2~3개의 열로 유연하게 변경 */
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 15px 10px; /* 세로 간격, 가로 간격 */
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-label {
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-bottom: 2px;
+}
+
+.stat-value {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #343a40;
+}
+/* ===================================================================
+                    모달 썸네일 다운로드 아이콘 스타일
+   =================================================================== */
+.modal-info-thumb {
+    position: relative; /* 아이콘 위치 기준점 */
+}
+
+.modal-info-thumb .download-icon {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8em;
+    opacity: 0; /* 평소엔 안보이게 */
+    transition: opacity 0.2s ease-in-out;
+    text-decoration: none;
+}
+
+.modal-info-thumb a:hover .download-icon {
+    opacity: 1; /* 마우스 올리면 보이게 */
+}

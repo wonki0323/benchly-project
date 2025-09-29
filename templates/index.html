@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Benchly</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .auth-links a { margin-left: 15px; text-decoration: none; color: #3498db; font-weight: bold; }
+        .auth-links .user-welcome { margin-right: 15px; color: #333; }
+    </style>
+</head>
+<body>
+    <main data-extension-id="{{ extension_id }}">
+        <nav class="navbar">
+            <div><h1>Benchly 🚀</h1></div>
+            <div class="auth-links">
+            {% if current_user.is_authenticated %}
+                <span class="user-welcome">{{ current_user.username }}님, 환영합니다!</span>
+                <a href="{{ url_for('dashboard') }}">대시보드</a>
+                <a href="{{ url_for('logout') }}">로그아웃</a>
+            {% else %}
+                <a href="{{ url_for('login_page') }}">로그인</a>
+                <a href="{{ url_for('register_page') }}">회원가입</a>
+            {% endif %}
+            </div>
+        </nav>
+        
+        <section class="control-panel">
+            <div class="search-mode">
+                <input type="radio" id="searchKeyword" name="searchMode" value="keyword" checked>
+                <label for="searchKeyword">키워드로 검색</label>
+                <input type="radio" id="searchChannel" name="searchMode" value="channel">
+                <label for="searchChannel">특정 채널 분석</label>
+            </div>
+            <div class="search-main">
+                <select id="targetLanguage">
+                    <option value="ko">한국어</option>
+                    <option value="en">영어</option>
+                    <option value="ja">일본어</option>
+                </select>
+                <input type="text" id="searchInput" placeholder="분석할 키워드를 입력하세요.">
+                <button id="startButton" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+            </div>
+            <div id="keyword-recommendation-area" style="display: none;">
+                <h4>AI 추천 연관 키워드:</h4>
+                <div id="keyword-chips-container"></div>
+            </div>
+            <div class="search-actions">
+                <button id="saveJobButton"><i class="fa-solid fa-save"></i> 현재 작업 저장</button>
+                <button id="clearButton"><i class="fa-solid fa-trash"></i> 결과 지우기</button>
+                <button id="exportButton"><i class="fa-solid fa-file-excel"></i> Excel로 내보내기</button>
+            </div>
+        </section>
+
+        <section class="filter-panel">
+            <div class="filter-group">
+                <h4>콘텐츠 종류</h4>
+                <select id="videoLengthType">
+                    <option value="any">전체 길이</option>
+                    <option value="short">숏폼 (4분 미만)</option>
+                    <option value="medium">중편 (4~20분)</option>
+                    <option value="long">롱폼 (20분 초과)</option>
+                </select>
+                <div>
+                    <input type="checkbox" id="excludeMadeForKids" checked> 
+                    <label for="excludeMadeForKids">아동용 콘텐츠 제외</label>
+                </div>
+            </div>
+            <div class="filter-group">
+                <h4>기간 및 지역</h4>
+                <div>
+                    <label for="uploadDays">업로드 기간:</label>
+                    최근 <input type="number" id="uploadDays" value="30" min="1" max="365"> 일 이내
+                </div>
+                <div>
+                    <label for="regionCode">대상 국가:</label>
+                    <select id="regionCode">
+                        <option value="KR">대한민국</option>
+                        <option value="US">미국</option>
+                        <option value="JP">일본</option>
+                    </select>
+                </div>
+            </div>
+            <div class="filter-group">
+                <h4>검색 정렬 기준</h4>
+                <select id="sortOrder">
+                    <option value="relevance">관련성 높은 순 (기본값)</option>
+                    <option value="viewCount">총 조회수 순</option>
+                    <option value="date">최신 업로드 순</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <h4>성과 필터 (서버 2차 필터링)</h4>
+                <label for="minViewCount">최소 조회수:</label>
+                <input type="number" id="minViewCount" value="10000" step="1000">
+                <div>
+                    <input type="checkbox" id="vphToggle">
+                    <label for="vphToggle">시간당 최소 조회수(VPH) 제한:</label>
+                    <input type="number" id="minVPH" value="100" step="10">
+                </div>
+            </div>
+            <div class="filter-group">
+                <h4>결과 수 제한</h4>
+                <label for="maxResults">최대 결과 수:</label>
+                <input type="number" id="maxResults" value="50" min="5" max="50">
+            </div>
+        </section>
+
+        <section id="results-container" class="results-table-container">
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th class="col-number">#</th> 
+                        <th>썸네일</th>
+                        <th class="sortable" data-sort-key="title">제목 / 채널 - 업로드일자 <span></span></th>
+                        <th class="sortable" data-sort-key="viewCount">조회수 <span></span></th>
+                        <th class="sortable" data-sort-key="likeRatio">좋아요(%) <span></span></th> 
+                        <th class="sortable" data-sort-key="vph">VPH <span></span></th> 
+                        <th class="sortable" data-sort-key="subscriberCount">구독자수 <span></span></th> 
+                        <th class="sortable" data-sort-key="ratio">조회/구독비율 <span></span></th> 
+                        <th class="sortable" data-sort-key="duration_seconds">영상 길이 <span></span></th>
+                        <th>링크</th>
+                        <th>분석</th>
+                    </tr>
+                </thead>
+                <tbody id="results-tbody">
+                </tbody>
+            </table>
+            <p id="initial-message">분석할 조건을 설정하고 [Search] 버튼을 누르세요.</p>
+        </section>
+    </main>
+
+    <div id="transcript-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">영상 분석</h2>
+                <button class="modal-close-btn" id="modal-close-x-btn">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body-content">
+                <div id="modal-video-player-container"></div>
+
+                <div class="modal-info-panel">
+    <div class="modal-info-thumb">
+        <a id="modal-thumb-download-link" href="#" target="_blank" title="고해상도 썸네일 다운로드">
+            <img id="modal-video-thumbnail" src="" alt="Video Thumbnail">
+            <i class="fa-solid fa-download download-icon"></i>
+        </a>
+    </div>
+    <div class="modal-info-stats">
+        <h3 id="modal-channel-title">채널 이름</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-label">조회수</span>
+                <span class="stat-value" id="modal-meta-viewcount">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">VPH</span>
+                <span class="stat-value" id="modal-meta-vph">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">구독자</span>
+                <span class="stat-value" id="modal-meta-subscribers">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">업로드</span>
+                <span class="stat-value" id="modal-meta-uploaddate">N/A</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">조회/구독비율</span>
+                <span class="stat-value" id="modal-meta-ratio">0%</span>
+            </div>
+        </div>
+    </div>
+</div>
+                
+                <div class="transcript-section">
+                    <h4>영상 스크립트</h4>
+                    <textarea id="modal-transcript-text" readonly></textarea>
+                </div>
+               <div class="ai-section">
+                    <h4>AI 성공 요인 분석</h4>
+                    <div class="filter-group" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <label for="modal-ai-model" style="white-space: nowrap;">AI 모델 선택:</label>
+                     <select id="modal-ai-model" style="flex-grow: 1; padding: 8px;">
+                        <option value="gemini-flash-latest" selected>🚀 속도 우선 (Flash - 추천)</option>
+                        <option value="gemini-pro-latest">🧠 품질 우선 (Pro)</option>
+                    </select>
+                    </div>
+
+                    <label for="modal-ai-prompt">AI 프롬프트:</label>
+                    <textarea id="modal-ai-prompt"></textarea>
+                    
+                    <button class="btn-primary" id="modal-run-ai-btn">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> AI 성공 요인 분석하기
+                    </button>
+                    <div class="ai-result-box" id="ai-summary-content">
+                        <p>스크립트를 불러온 후, 'AI 분석' 버튼을 눌러주세요.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="modal-close-action-btn">닫기</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

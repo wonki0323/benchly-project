@@ -1,0 +1,23 @@
+# 비밀번호와 API 키가 담긴 .env 파일을 무시합니다.
+.env
+
+# 로컬 데이터베이스 파일을 무시합니다.
+benchly.db
+
+# 파이썬 캐시 파일을 무시합니다.
+__pycache__/
+*.pyc
+
+# (추후 가상환경 폴더를 만들 경우)
+.venv/
+venv/
+# Secret files
+client_secret.json
+
+# Database files
+instance/
+*.db
+*.db-journal
+
+# VS Code settings
+.vscode/
